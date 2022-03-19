@@ -40,29 +40,125 @@ radio.setTransmitPower(7)
 
 ### Sjekke ArmStatus på kofferten
 
-Sett opp en ``||logic: hvis-b                                                                                                                                                                                                                                                                                                                                             etingelse ||``som sjekker (``||pins: les digitalverdi ||``) om Software Arm Switch (``||pins: P1||``) er 0. Hvis``||pins: P1 = 0 ||``, sett variabelen ``||variabel: ArmStatus ||`` til ``||logic: sann||``, ellers sett ``||variabel: ArmStatus ||`` til ``||logic: usann||``.
+Inni ``||basic: Gjenta for alltid||``:
 
+Sett opp en ``||logic: hvis-betingelse ||`` som sjekker om Software Arm Switch (``||pins: les digitalverdi P1 ||``) er 0. 
 
+Hvis ``||pins: P1 = 0 ||``, sett variabelen ``||variabel: ArmStatus ||`` til ``||logic: sann||``, ellers sett ``||variabel: ArmStatus ||`` til ``||logic: usann||``.
 
+```blocks
+basic.forever(function on_forever() {
+    if (pins.digitalReadPin(DigitalPin.P1) == 0) {
+        ArmStatus = true
+    } else {
+        ArmStatus = false
+    } 
+})
+```
 
+## Del 1.3:
 
+### Sjekke om Launch-knappen er trykket ned
 
+Lag en ny ``||logic: hvis-betingelse ||`` som sjekker om Launch-button (``||pins: les digitalverdi P11 ||``) er 0. 
 
+Hvis den er det, kjør funksjonen ``||functions: Launch||``.
 
+```blocks
+basic.forever(function on_forever() {
+    if (pins.digitalReadPin(DigitalPin.P1) == 0) {
+        ArmStatus = true
+    } else {
+        ArmStatus = false
+    } 
+    if (pins.digitalReadPin(DigitalPin.P11) == 0) {
+        Launch()
+    }
+})
+function Launch () {
+	
+}
+```
 
+## Del 1.4:
 
+### Launch-kommando kun ved armering
 
+Launch-kommandoen skal kun få bli sendt hvis ``||variabel: ArmStatus ||`` er ``||logic: Sann ||``.
 
+Kommandoen skal sendes med radio til LaunchPAD. Send ``||radio: radio send tall 42 ||``.
 
+```blocks
+function Launch () {
+	if (ArmStatus) {
+        radio.sendNumber(42)
+    }
+}
+```
 
+## Del 1.5:
 
+### Buzzer som varsler om oppskytning
 
+For å si ifra til omgivelsene at systemet er armert, skal vi skru PÅ Buzzer (``||pins: skriv digital til P13 = 1 ||``) når ``||variabel: ArmStatus ||`` er ``||logic: sann ||``, og AV når ``||variabel: ArmStatus ||`` er ``||logic: usann ||``. 
 
+Skru AV Buzzer (``||pins: skriv digital til P13 = 0 ||``) etter du har sendt Launch-kommando.
 
+```blocks
+basic.forever(function on_forever() {
+    if (pins.digitalReadPin(DigitalPin.P1) == 0) {
+        ArmStatus = true
+        pins.digitalWritePin(DigitalPin.P13, 1)
+    } else {
+        ArmStatus = false
+        pins.digitalWritePin(DigitalPin.P13, 0)
+    } 
+    if (pins.digitalReadPin(DigitalPin.P11) == 0) {
+        Launch()
+    }
+})
+function Launch () {
+	if (ArmStatus) {
+        radio.sendNumber(42)
+        pins.digitalWritePin(DigitalPin.P13, 0)   
+    }
+}
+```
 
+## Del 1.6:
 
+### Rearmere kofferten før ny oppskytning
 
+Kofferten får ikke skyte opp en ny rakett før den er rearmert. (Armeringsbryteren må skrus AV.)
 
+Så for å "låse" kofferten etter at Launch-kommandoen er sendt, bruk en ``||loops: gjenta hvis sann ||``, og sett rearm-LED ``||pins: skriv digital til P8 ||`` til å blinke så lenge ``||pins: les digital P1 = 0 ||``.
+
+Bruk en ``||basic: pause ||`` på 500 ms mellom hver gang ``||pins: P8 ||`` er 1 og 0.
+
+```blocks
+function Launch () {
+	if (ArmStatus) {
+        radio.sendNumber(42)
+        pins.digitalWritePin(DigitalPin.P13, 0)
+        while (pins.digitalReadPin(DigitalPin.P1) == 0) {
+            pins.digitalWritePin(DigitalPin.P8, 1)
+            basic.pause(500)
+            pins.digitalWritePin(DigitalPin.P8, 0)
+            basic.pause(500)
+        }
+    }
+}
+```
+
+## Del 1.7:
+
+### Bytte Tutorial
+
+Gratulerer! Vi er nå ferdige med å lage MÅ-koden på ControllerPAD!
+
+Bytt veiledning, og start å lage koden til LaunchPAD-kofferten!
+
+![Launch-PAD.jpg](https://i.postimg.cc/Sxhw0Mck/Launch-PAD.jpg)
 
 
 
